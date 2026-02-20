@@ -1,0 +1,27 @@
+---
+title: Second Post
+date: '2026-02-21'
+description: A second post exploring more markdown features.
+---
+
+# Exploring More Features
+
+This is my second post to test the blog system.
+
+## Lists
+
+- Item one
+- Item two
+- Item three
+
+## Blockquotes
+
+> This is a blockquote. It looks nice for highlighting quotes.
+
+## Links
+
+Check out [Svelte](https://svelte.dev) for more info.
+
+---
+
+Thanks for reading!
