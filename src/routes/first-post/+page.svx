@@ -18,6 +18,10 @@ I'm writing in **markdown** and mdsvex converts it to HTML automatically.
 
 ```javascript
 console.log('Hello, world!');
+
+function twelve() {
+	return 12;
+}
 ```
 
 That's it for now!

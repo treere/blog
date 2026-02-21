@@ -1,0 +1,19 @@
+---
+title: Third Post
+date: '2026-02-21'
+description: This is a hidden blog post that won't appear on the home page.
+published: false
+---
+
+# Hidden Post
+
+This post has `published: false` in its metadata, so it won't show up on the home page.
+
+You can still access it directly at `/third-post`.
+
+## Why hidden?
+
+Sometimes you might want to:
+- Work on a draft
+- Share a post via direct link
+- Archive old content
