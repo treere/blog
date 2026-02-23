@@ -30,7 +30,7 @@
 
 <div class="hero">
 	<h1>Welcome</h1>
-	<p>Thoughts on programming, design, and technology.</p>
+	<p>Thoughts on programming, technology and more.</p>
 </div>
 
 <section class="posts-section">
@@ -38,8 +38,10 @@
 
 	{#each posts as post}
 		<a href="/{post.slug}" class="post-card">
-			<h3>{post.title}</h3>
-			<time>{post.date}</time>
+			<div class="flex items-center justify-between">
+				<h3>{post.title}</h3>
+				<time>{post.date}</time>
+			</div>
 			<p>{post.description}</p>
 		</a>
 	{/each}

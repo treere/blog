@@ -30,12 +30,16 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>My Blog</title>
+	<title>Blog</title>
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/themes/prism-okaidia.min.css"
+	/>
 </svelte:head>
 
 <header>
 	<div class="header-content">
-		<a href="/" class="logo">My Blog</a>
+		<a href="/" class="logo">Blog</a>
 		<button class="theme-toggle" onclick={toggleDarkMode} aria-label="Toggle dark mode">
 			{#if darkMode}
 				<svg
@@ -78,10 +82,10 @@
 	</div>
 </header>
 
-<main class="prose">
+<main class="prose dark:prose-invert">
 	{@render children()}
 </main>
 
 <footer>
-	<p>© {new Date().getFullYear()} My Blog. Built with SvelteKit.</p>
+	<p>© {new Date().getFullYear()} Blog</p>
 </footer>
