@@ -2,6 +2,7 @@
 	import { getPosts } from '$lib/utils/posts';
 	import type { Post } from '$lib/utils/posts';
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 
 	const posts: Post[] = getPosts();
 
@@ -37,7 +38,7 @@
 	<h2>Recent Posts</h2>
 
 	{#each posts as post}
-		<a href="/{post.slug}" class="post-card">
+		<a href="{base}/{post.slug}" class="post-card">
 			<div class="flex items-center justify-between">
 				<h3>{post.title}</h3>
 				<time>{post.date}</time>
