@@ -1,27 +1,15 @@
 ---
-title: First Post
-date: '2026-02-20'
-description: This is my first blog post using SvelteKit and mdsvex.
+title: About this blog
+date: '2026-02-24'
+description: This is my first blog post
 ---
 
-# Welcome to My Blog
+# Welcome to Blog
 
-This is the first post on my new blog built with **SvelteKit**.
+This is the first post on blog.
 
-I'm writing in **markdown** and mdsvex converts it to HTML automatically.
+In this blog I will write about software things that I will find interesting.
 
-## Why SvelteKit?
-
-- Fast
-- Simple
-- Great developer experience
-
-```javascript
-console.log('Hello, world!');
-
-function twelve() {
-	return 12;
-}
-```
+Something will come from my everyday working activities. Something will come from my hobbies.
 
 That's it for now!

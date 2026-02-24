@@ -2,6 +2,7 @@
 title: Second Post
 date: '2026-02-21'
 description: A second post exploring more markdown features.
+published: false
 ---
 
 # Exploring More Features
