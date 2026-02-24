@@ -1,42 +1,39 @@
-# sv
+# Blog
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A personal blog built with SvelteKit and mdsvex.
 
-## Creating a project
+## Stack
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **SvelteKit** with Svelte 5
+- **mdsvex** for markdown blog posts
+- **TailwindCSS** with typography plugin
+- **PrismJS** for syntax highlighting
+- **Static adapter** for deployment
 
-```sh
-# create a new project
-npx sv create my-app
+## Writing Posts
+
+Create new posts in `src/routes/` using the `.svx` or `.md` format:
+
+```svx
+---
+title: Your Post Title
+date: '2026-02-24'
+description: A brief description
+---
+
+# Your content here
 ```
 
-To recreate this project with the same configuration:
+## Commands
 
 ```sh
-# recreate this project
-npx sv create --template minimal --types ts --add prettier eslint tailwindcss="plugins:typography" sveltekit-adapter="adapter:static" mdsvex --install npm blog
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+npm run check    # Type check
+npm run format   # Format code
 ```
 
-## Developing
+## Deployment
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Build outputs to `build/`. Deploy to any static host (GitHub Pages, Vercel, Netlify, etc.).
