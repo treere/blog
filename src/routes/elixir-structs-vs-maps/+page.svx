@@ -1,0 +1,199 @@
+---
+title: The Strange Case of Elixir Structs
+date: '2026-02-27'
+description: Map vs structs in elixir - the hidden gotchas that will bite you
+---
+
+# The Strange Case of Elixir Structs
+
+You think you know maps? You think you know structs? Let me show you something that caught me off guard.
+
+## What's the difference?
+
+In Elixir, maps and structs look similar but behave differently.
+
+A **map** is a dynamic key-value container:
+
+```elixir
+map = %{k1: "v1"}
+
+Map.put(map, :k2, "v2")   # => %{k1: "v1", k2: "v2"}
+Map.delete(map, :k1)      # => %{}
+Map.update(map, :k1, nil, fn _ -> "v2" end)  # => %{k1: "v2"}
+```
+
+Maps are flexible. You can add any key, remove any key, change any value. Elixir gives you a small safety net with the update syntax — it forces you to only modify existing keys:
+
+```elixir
+%{map | k1: "v2"}  # => %{k1: "v2"}
+%{map | k2: "v2"}  # ** (KeyError) key :k2 not found
+```
+
+A **struct** is a "special" map with compile-time guarantees:
+
+```elixir
+defmodule Pet do
+  defstruct [:name]
+end
+```
+
+You get compile-time warnings for typos in keys, nice pattern matching, and default values. But these guarantees aren't as solid as you might think.
+
+## Let's look under the hood
+
+What exactly IS a struct under the surface? In `iex`, we can inspect both:
+
+```
+iex> i %{}
+Term
+  %{}
+Data type
+  Map
+Reference modules
+  Map
+Implemented protocols
+  Collectable, Enumerable, IEx.Info, Inspect, JSON.Encoder
+```
+
+Maps implement several useful protocols. Now the struct:
+
+```
+iex> i %Pet{name: "Fluffy"}
+Term
+  %Pet{name: nil}
+Data type
+  Pet
+Description
+  This is a struct. Structs are maps with a __struct__ key.
+Reference modules
+  Pet, Map
+Implemented protocols
+  IEx.Info, Inspect
+```
+
+Look at the description: "Structs are maps with a `__struct__` key." Let's verify:
+
+```elixir
+iex> %{__struct__: Pet, name: "Fluffy"} == %Pet{name: "Fluffy"}
+true
+```
+
+It's literally just a map with one special key.
+
+## Here's where it gets weird
+
+Data-wise, structs ARE maps — they even have that `__struct__` key. But **functionally**, they're different. Here's why:
+
+**Maps implement `Enumerable` and `Collectable`:**
+
+```elixir
+Enum.count(%{a: 1})  # => 1
+Enum.map(%{a: 1, b: 2}, fn {k, v} -> {k, v * 2} end)  # => [a: 2, b: 4]
+```
+
+**Structs don't:**
+
+```elixir
+Enum.count(%Pet{})  
+# ** (Protocol.UndefinedError) protocol Enumerable not implemented for Pet
+```
+
+This seems wrong, right? They're both maps underneath! But in Elixir, "being a map" from a data perspective doesn't mean "behaves the same" from a functional perspective. The struct deliberately does NOT implement those protocols.
+
+Why? Probably because structs represent fixed-shape data. Iterating over a struct doesn't make much sense — you're supposed to know what fields exist.
+
+## The Map module works on both
+
+You can use `Map` functions on both:
+
+```elixir
+Map.get(%{k1: 1}, :k1)              # => 1
+Map.get(%Pet{name: "Fluffy"}, :name)  # => "Fluffy"
+```
+
+And operations that modify data preserve the struct:
+
+```elixir
+pet = %Pet{name: "Fluffy"}
+
+Map.put(pet, :age, 3)   
+# => %{name: "Fluffy", __struct__: Pet, age: 3}
+
+Map.delete(pet, :name)  
+# => %{__struct__: Pet}
+```
+
+Still a Pet. Let's verify:
+
+```
+iex> i Map.delete(pet, :name)
+Term
+  %{__struct__: Pet}
+Data type
+  Pet
+Description
+  This is a struct. Structs are maps with a __struct__ key.
+```
+
+So the docs were telling the truth. A struct is just a map with `__struct__`. But you'd expect this safety to extend to pattern matching, right? It doesn't.
+
+## Gotcha #1: Matching works differently
+
+This works:
+
+```elixir
+%{name: "Fluffy", __struct__: Pet, age: 3} = Map.put(pet, :age, 3)
+```
+
+But this doesn't:
+
+```elixir
+%Pet{name: "Fluffy", age: 3} = Map.put(pet, :age, 3)
+# error: unknown key :age for struct Pet
+```
+
+The map matching syntax is more flexible than the struct syntax sugar. When you use `%Pet{}`, Elixir enforces the struct's defined fields. But raw map pattern matching doesn't care.
+
+## Gotcha #2: No field guarantees at runtime
+
+```elixir
+def print_name(%Pet{} = pet) do
+  IO.puts(pet.name)
+end
+```
+
+This looks safe. We're pattern matching on `%Pet{}`, so we have a Pet. But if someone passes in a struct with the `:name` field deleted using `Map.delete(pet, :name)`... boom. Runtime error.
+
+The `%Pet{}` match only checks for the `__struct__` key. It doesn't guarantee any defined fields are present.
+
+## The "Feature"
+
+You can add arbitrary fields to a struct using `Map.put`:
+
+```elixir
+animal = %Pet{name: "Fluffy"} |> Map.put(:age, 12)
+
+case animal do
+  %{age: 12} -> animal.name 
+  _ -> nil
+end
+```
+
+It still matches as a Pet, passes `%Pet{}` checks, but now has an `:age` field that the definition didn't know about.
+
+Useful in some edge cases, but it breaks the implicit contract of what a struct is.
+
+## How did I discover this?
+
+I was debugging an issue where code was behaving strangely — fields missing, nil when they shouldn't be, extra fields nobody remembered adding.
+
+After hours of tracing, I found it: utility functions that freely added and removed fields from structs using `Map.put` and `Map.delete`, treating them just like maps. Later code using those structs had no idea what had happened.
+
+Was it a bug? No — just the natural evolution of a codebase. Someone needed to add a field temporarily, used the obvious solution, and it worked. But nobody realized they were quietly breaking the struct's contract.
+
+## The Takeaway
+
+1. Don't trust struct fields too much — they can be modified with Map functions
+2. Maps and structs are functionally different — even though they're the same underneath
+3. The `%Pet{}` syntax gives you less safety than you think — it only checks for `__struct__`
+4. This will likely interact strangely with Elixir's type system — when it arrives, how will it handle these edge cases? 
