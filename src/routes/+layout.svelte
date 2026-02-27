@@ -39,7 +39,10 @@
 
 <header>
 	<div class="header-content">
-		<a href="/" class="logo">Blog</a>
+		<a href="/" class="logo">
+			<img src={favicon} alt="" class="logo-icon" />
+			Blog
+		</a>
 		<button class="theme-toggle" onclick={toggleDarkMode} aria-label="Toggle dark mode">
 			{#if darkMode}
 				<svg
