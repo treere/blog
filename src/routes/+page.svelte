@@ -1,32 +1,9 @@
 <script lang="ts">
 	import { getPosts } from '$lib/utils/posts';
 	import type { Post } from '$lib/utils/posts';
-	import { onMount } from 'svelte';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 
 	const posts: Post[] = getPosts();
-
-	let darkMode = $state(false);
-
-	onMount(() => {
-		const stored = localStorage.getItem('darkMode');
-		if (stored !== null) {
-			darkMode = stored === 'true';
-		} else {
-			darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		}
-		applyTheme();
-	});
-
-	function toggleDarkMode() {
-		darkMode = !darkMode;
-		localStorage.setItem('darkMode', String(darkMode));
-		applyTheme();
-	}
-
-	function applyTheme() {
-		document.documentElement.classList.toggle('dark', darkMode);
-	}
 </script>
 
 <div class="hero">
@@ -37,8 +14,8 @@
 <section class="posts-section">
 	<h2>Recent Posts</h2>
 
-	{#each posts as post}
-		<a href="{base}/{post.slug}" class="post-card">
+	{#each posts as post (post.slug)}
+		<a href={resolve(`/${post.slug}` as '/')} class="post-card">
 			<div class="flex items-center justify-between">
 				<h3>{post.title}</h3>
 				<time>{post.date}</time>

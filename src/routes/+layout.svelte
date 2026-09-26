@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 
 	let { children } = $props();
 
@@ -39,7 +40,7 @@
 
 <header>
 	<div class="header-content">
-		<a href="/" class="logo">
+		<a href={resolve('/')} class="logo">
 			<img src={favicon} alt="" class="logo-icon" />
 			Blog
 		</a>

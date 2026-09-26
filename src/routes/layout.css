@@ -1,18 +1,17 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography' {
-  (
-    --font-sans: ui-sans-serif, system-ui, sans-serif;
-    --color-gray-50: oklch(0.98 0 0);
-    --color-gray-100: oklch(0.95 0 0);
-    --color-gray-200: oklch(0.9 0 0);
-    --color-gray-300: oklch(0.85 0 0);
-    --color-gray-400: oklch(0.7 0 0);
-    --color-gray-500: oklch(0.55 0 0);
-    --color-gray-600: oklch(0.45 0 0);
-    --color-gray-700: oklch(0.35 0 0);
-    --color-gray-800: oklch(0.25 0 0);
-    --color-gray-900: oklch(0.15 0 0);
-  );
+@plugin '@tailwindcss/typography';
+@theme {
+	--font-sans: ui-sans-serif, system-ui, sans-serif;
+	--color-gray-50: oklch(0.98 0 0);
+	--color-gray-100: oklch(0.95 0 0);
+	--color-gray-200: oklch(0.9 0 0);
+	--color-gray-300: oklch(0.85 0 0);
+	--color-gray-400: oklch(0.7 0 0);
+	--color-gray-500: oklch(0.55 0 0);
+	--color-gray-600: oklch(0.45 0 0);
+	--color-gray-700: oklch(0.35 0 0);
+	--color-gray-800: oklch(0.25 0 0);
+	--color-gray-900: oklch(0.15 0 0);
 }
 
 :root {
@@ -37,20 +36,22 @@
 	--border-hover: oklch(0.4 0 0);
 	--shadow-color: oklch(0 0 0 / 0.3);
 }
-:global() {
-}
 
 body {
 	background: var(--bg-primary);
 	min-height: 100vh;
-	transition: background 0.3s, color 0.3s;
+	transition:
+		background 0.3s,
+		color 0.3s;
 }
 
 header {
 	background: var(--bg-secondary);
 	border-bottom: 1px solid var(--border-color);
 	padding: 1rem 0;
-	transition: background 0.3s, border-color 0.3s;
+	transition:
+		background 0.3s,
+		border-color 0.3s;
 }
 
 .header-content {
@@ -88,7 +89,9 @@ header {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: color 0.2s, transform 0.2s;
+	transition:
+		color 0.2s,
+		transform 0.2s;
 }
 
 .theme-toggle:hover {
@@ -111,6 +114,7 @@ footer {
 	font-size: 0.85rem;
 	border-top: 1px solid var(--border-color);
 	margin-top: 4rem;
-	transition: color 0.3s, border-color 0.3s;
+	transition:
+		color 0.3s,
+		border-color 0.3s;
 }
-

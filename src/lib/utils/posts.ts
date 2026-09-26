@@ -6,11 +6,21 @@ export interface Post {
 	published?: boolean;
 }
 
-const postModules = import.meta.glob('/src/routes/*/+page.svx', { eager: true });
+interface PostMetadata {
+	title: string;
+	date: string;
+	description: string;
+	published?: boolean;
+}
+
+const postModules: Record<string, { metadata: PostMetadata }> = import.meta.glob(
+	'/src/routes/*/+page.svx',
+	{ eager: true }
+);
 
 export function getPosts(): Post[] {
 	const posts = Object.entries(postModules)
-		.map(([path, module]: [string, any]) => {
+		.map(([path, module]) => {
 			const slug = path.split('/').slice(-2)[0]?.replace('+page.svx', '') ?? '';
 			return {
 				slug,

@@ -4,7 +4,7 @@ import adapter from '@sveltejs/adapter-static';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: { adapter: adapter() },
-	preprocess: [mdsvex({smartypants: true})],
+	preprocess: [mdsvex({ smartypants: true })],
 	extensions: ['.svelte', '.svx']
 };
 
