@@ -12,7 +12,7 @@ A personal blog built with SvelteKit and mdsvex.
 
 ## Writing Posts
 
-Create new posts in `src/routes/` using the `.svx` or `.md` format:
+Create new posts in `src/content/` as `<slug>.en.svx` + `<slug>.it.svx`:
 
 ```svx
 ---
@@ -23,6 +23,9 @@ description: A brief description
 
 # Your content here
 ```
+
+URLs: `/en/<slug>` and `/it/<slug>`. If a translation is missing, the English version
+is shown with a notice.
 
 ## Commands
 

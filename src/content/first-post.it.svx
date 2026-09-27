@@ -1,0 +1,15 @@
+---
+title: 'Questo blog'
+date: '2026-02-24'
+description: 'Questo è il mio primo articolo'
+---
+
+# Benvenuto nel Blog
+
+Questo è il primo articolo del blog.
+
+In questo blog scriverò di cose software che troverò interessanti.
+
+Qualcosa verrà dal mio lavoro quotidiano. Qualcosa verrà dai miei hobby.
+
+Per ora è tutto!

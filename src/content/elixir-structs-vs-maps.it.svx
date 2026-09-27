@@ -1,0 +1,199 @@
+---
+title: 'Lo strano caso delle Struct in Elixir'
+date: '2026-02-27'
+description: 'Map contro struct in Elixir - le insidie nascoste che ti morderanno'
+---
+
+# Lo strano caso delle Struct in Elixir
+
+Pensi di conoscere le map? Pensi di conoscere le struct? Lascia che ti mostri qualcosa che mi ha colto di sorpresa.
+
+## Qual è la differenza?
+
+In Elixir, map e struct sembrano simili ma si comportano diversamente.
+
+Una **map** è un contenitore dinamico chiave-valore:
+
+```elixir
+map = %{k1: "v1"}
+
+Map.put(map, :k2, "v2")   # => %{k1: "v1", k2: "v2"}
+Map.delete(map, :k1)      # => %{}
+Map.update(map, :k1, nil, fn _ -> "v2" end)  # => %{k1: "v2"}
+```
+
+Le map sono flessibili. Puoi aggiungere qualsiasi chiave, rimuovere qualsiasi chiave, cambiare qualsiasi valore. Elixir ti dà una piccola rete di sicurezza con la sintassi di aggiornamento — ti obbliga a modificare solo chiavi esistenti:
+
+```elixir
+%{map | k1: "v2"}  # => %{k1: "v2"}
+%{map | k2: "v2"}  # ** (KeyError) key :k2 not found
+```
+
+Una **struct** è una map "speciale" con garanzie a compile-time:
+
+```elixir
+defmodule Pet do
+  defstruct [:name]
+end
+```
+
+Ottieni avvisi a compile-time per errori di battitura nelle chiavi, bel pattern matching e valori di default. Ma queste garanzie non sono solide come potresti pensare.
+
+## Guardiamo sotto il cofano
+
+Cos'è ESATTAMENTE una struct in realtà? In `iex`, possiamo ispezionarle entrambe:
+
+```
+iex> i %{}
+Term
+  %{}
+Data type
+  Map
+Reference modules
+  Map
+Implemented protocols
+  Collectable, Enumerable, IEx.Info, Inspect, JSON.Encoder
+```
+
+Le map implementano diversi protocolli utili. Ora la struct:
+
+```
+iex> i %Pet{name: "Fluffy"}
+Term
+  %Pet{name: nil}
+Data type
+  Pet
+Description
+  This is a struct. Structs are maps with a __struct__ key.
+Reference modules
+  Pet, Map
+Implemented protocols
+  IEx.Info, Inspect
+```
+
+Guarda la descrizione: "Structs are maps with a `__struct__` key." Verifichiamo:
+
+```elixir
+iex> %{__struct__: Pet, name: "Fluffy"} == %Pet{name: "Fluffy"}
+true
+```
+
+È letteralmente solo una map con una chiave speciale.
+
+## Qui diventa strano
+
+Come dati, le struct SONO map — hanno persino quella chiave `__struct__`. Ma **funzionalmente** sono diverse. Ecco perché:
+
+**Le map implementano `Enumerable` e `Collectable`:**
+
+```elixir
+Enum.count(%{a: 1})  # => 1
+Enum.map(%{a: 1, b: 2}, fn {k, v} -> {k, v * 2} end)  # => [a: 2, b: 4]
+```
+
+**Le struct no:**
+
+```elixir
+Enum.count(%Pet{})
+# ** (Protocol.UndefinedError) protocol Enumerable not implemented for Pet
+```
+
+Sembra sbagliato, vero? Sotto sotto sono entrambe map! Ma in Elixir, "essere una map" dal punto di vista dei dati non significa "comportarsi allo stesso modo" dal punto di vista funzionale. La struct deliberatamente NON implementa quei protocolli.
+
+Perché? Probabilmente perché le struct rappresentano dati con forma fissa. Iterare su una struct non ha molto senso — dovresti già sapere quali campi esistono.
+
+## Il modulo Map funziona su entrambe
+
+Puoi usare le funzioni `Map` su entrambe:
+
+```elixir
+Map.get(%{k1: 1}, :k1)              # => 1
+Map.get(%Pet{name: "Fluffy"}, :name)  # => "Fluffy"
+```
+
+E le operazioni che modificano i dati preservano la struct:
+
+```elixir
+pet = %Pet{name: "Fluffy"}
+
+Map.put(pet, :age, 3)
+# => %{name: "Fluffy", __struct__: Pet, age: 3}
+
+Map.delete(pet, :name)
+# => %{__struct__: Pet}
+```
+
+Resta un Pet. Verifichiamo:
+
+```
+iex> i Map.delete(pet, :name)
+Term
+  %{__struct__: Pet}
+Data type
+  Pet
+Description
+  This is a struct. Structs are maps with a __struct__ key.
+```
+
+Quindi la documentazione diceva la verità. Una struct è solo una map con `__struct__`. Ma ti aspetteresti che questa sicurezza si estenda al pattern matching, giusto? Non lo fa.
+
+## Insidia #1: il matching funziona diversamente
+
+Questo funziona:
+
+```elixir
+%{name: "Fluffy", __struct__: Pet, age: 3} = Map.put(pet, :age, 3)
+```
+
+Ma questo no:
+
+```elixir
+%Pet{name: "Fluffy", age: 3} = Map.put(pet, :age, 3)
+# error: unknown key :age for struct Pet
+```
+
+La sintassi di matching sulle map è più flessibile dello zucchero sintattico delle struct. Quando usi `%Pet{}`, Elixir applica i campi definiti della struct. Ma il pattern matching grezzo sulle map non se ne cura.
+
+## Insidia #2: nessuna garanzia sui campi a runtime
+
+```elixir
+def print_name(%Pet{} = pet) do
+  IO.puts(pet.name)
+end
+```
+
+Sembra sicuro. Facciamo matching su `%Pet{}`, quindi abbiamo un Pet. Ma se qualcuno passa una struct con il campo `:name` cancellato usando `Map.delete(pet, :name)`... boom. Errore a runtime.
+
+Il match `%Pet{}` controlla solo la chiave `__struct__`. Non garantisce che i campi definiti siano presenti.
+
+## La "funzionalità"
+
+Puoi aggiungere campi arbitrari a una struct usando `Map.put`:
+
+```elixir
+animal = %Pet{name: "Fluffy"} |> Map.put(:age, 12)
+
+case animal do
+  %{age: 12} -> animal.name
+  _ -> nil
+end
+```
+
+Resta un Pet valido per i controlli `%Pet{}`, ma ora ha un campo `:age` che la definizione non conosceva.
+
+Utile in alcuni casi limite, ma rompe il contratto implicito di cosa sia una struct.
+
+## Come l'ho scoperto?
+
+Stavo debuggando un problema in cui il codice si comportava stranamente — campi mancanti, nil quando non dovevano esserci, campi extra che nessuno ricordava di aver aggiunto.
+
+Dopo ore di analisi, l'ho trovato: funzioni di utilità che aggiungevano e rimuovevano liberamente campi dalle struct usando `Map.put` e `Map.delete`, trattandole proprio come map. Il codice successivo che usava quelle struct non aveva idea di cosa fosse successo.
+
+Era un bug? No — solo la naturale evoluzione di una codebase. Qualcuno doveva aggiungere temporaneamente un campo, ha usato la soluzione ovvia e ha funzionato. Ma nessuno si è reso conto che stava silenziosamente rompendo il contratto della struct.
+
+## La lezione
+
+1. Non fidarti troppo dei campi delle struct — possono essere modificati con le funzioni Map
+2. Map e struct sono funzionalmente diverse — anche se sotto sono uguali
+3. La sintassi `%Pet{}` ti dà meno sicurezza di quanto pensi — controlla solo `__struct__`
+4. Questo probabilmente interagirà stranamente con il type system di Elixir — quando arriverà, come gestirà questi casi limite?
