@@ -12,7 +12,7 @@
 
 <svelte:head>
 	<title>Blog</title>
-	<meta http-equiv="refresh" content="0; url=/en" />
+	<meta http-equiv="refresh" content="0; url=./en" />
 </svelte:head>
 
 <main class="prose">

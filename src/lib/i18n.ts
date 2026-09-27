@@ -64,13 +64,17 @@ export function getStrings(locale: Locale): UIStrings {
 	return strings[locale];
 }
 
-/** URL dell'altra lingua a parità di pagina. */
+/** URL dell'altra lingua a parità di pagina. Ritorna sempre un path SENZA base (/en/...),
+ * così resolve() aggiunge la base (es. /blog) esattamente una volta. Funziona sia con
+ * pathname con base (/blog/en/...) che senza (/en/...). */
 export function switchLocalePath(pathname: string, target: Locale): string {
 	const parts = pathname.split('/');
-	// pathname = /en/... oppure /it/...
-	if (parts.length > 1 && isLocale(parts[1])) {
-		parts[1] = target;
-		return parts.join('/') || '/';
+	// il segmento lingua è il primo segmento "en"/"it"; tutto ciò che lo precede è la base
+	const i = parts.findIndex((p) => isLocale(p));
+	if (i !== -1) {
+		const rest = parts.slice(i);
+		rest[0] = target;
+		return `/${rest.join('/')}`;
 	}
 	return `/${target}`;
 }
