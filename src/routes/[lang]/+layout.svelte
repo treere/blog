@@ -17,18 +17,23 @@
 	});
 
 	onMount(() => {
-		const stored = localStorage.getItem('darkMode');
-		if (stored !== null) {
-			darkMode = stored === 'true';
-		} else {
-			darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		}
-		applyTheme();
+		// Stato iniziale già impostato dallo script anti-FOUC in app.html
+		darkMode = document.documentElement.classList.contains('dark');
+		// Segui il sistema live solo se l'utente non ha scelto manualmente
+		const mq = window.matchMedia('(prefers-color-scheme: dark)');
+		const onChange = (e: MediaQueryListEvent) => {
+			if (localStorage.getItem('theme') === null) {
+				darkMode = e.matches;
+				applyTheme();
+			}
+		};
+		mq.addEventListener('change', onChange);
+		return () => mq.removeEventListener('change', onChange);
 	});
 
 	function toggleDarkMode() {
 		darkMode = !darkMode;
-		localStorage.setItem('darkMode', String(darkMode));
+		localStorage.setItem('theme', darkMode ? 'dark' : 'light');
 		applyTheme();
 	}
 
@@ -43,13 +48,11 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 	<title>{t.siteName}</title>
-	<link
-		rel="stylesheet"
-		href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/themes/prism-okaidia.min.css"
-	/>
 </svelte:head>
 
-<header>
+<a class="skip-link" href="#main-content">{lang === 'it' ? 'Salta al contenuto' : 'Skip to content'}</a>
+
+<header class="site-header">
 	<div class="header-content">
 		<a href={resolve(`/${lang}` as '/')} class="logo">
 			<img src={favicon} alt="" class="logo-icon" />
@@ -75,7 +78,13 @@
 					IT
 				</a>
 			</nav>
-			<button class="theme-toggle" onclick={toggleDarkMode} aria-label={t.toggleTheme}>
+			<button
+				class="theme-toggle"
+				onclick={toggleDarkMode}
+				aria-label={t.toggleTheme}
+				aria-pressed={darkMode}
+				title={t.toggleTheme}
+			>
 				{#if darkMode}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -118,11 +127,11 @@
 	</div>
 </header>
 
-<main class="prose dark:prose-invert">
+<main id="main-content" class="prose dark:prose-invert">
 	{@render children()}
 </main>
 
-<footer>
+<footer class="site-footer">
 	<p>© {new Date().getFullYear()} {t.footer}</p>
 </footer>
 
